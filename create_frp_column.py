@@ -1,6 +1,13 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+# Creado a partir del compute_frp_code-vitorino.py
+
+# Version Wed 01 Mar 2023 06:37:14 PM UTC
+
+# Alejandro Aguilar Sierra, asierra@unam.mx
+# Uriel Mendoza, urielmendozacastillo@gmail.com
+
 import math
 import rasterio
 import numpy as np
