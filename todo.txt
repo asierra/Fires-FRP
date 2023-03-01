@@ -1,0 +1,16 @@
+Thu 13 Oct 2022 02:31:57 PM CDT
+
+1. Leer csv renglón por renglón
+2. Calcular frp
+3. Agregar columna frp al csv
+
+Wed 01 Mar 2023 12:32:32 PM CST
+
+1. Traer los datos correspondientes de amazon.
+
+2. Adaptar el programa a que use esos datos.
+
+3. Probar con los puntos y comparar con el de Vitorino.
+
+4. Poner los resultados de Vitorino en este directorio.
+
