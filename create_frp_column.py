@@ -111,7 +111,7 @@ def xy2uv(x, y):
     return u, v
 
 
-pathInputSatAz = './sat_angles/sat_az.tif'
+pathInputSatAz = 'sat_az.tif'
 pathInputCh07 = 'OR_ABI-L2-CMIPF-M6C07_G16_s20211211940163_e20211211949482_c20211211949541.tif'
 
 ds_satz = rasterio.open(pathInputSatAz)
