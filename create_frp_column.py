@@ -14,6 +14,7 @@ import numpy as np
 from scipy import stats
 import csv
 
+
 def compute_pixel_size( lattd, satz, ifov=2.0 ):
     """
     Get pixel size
@@ -72,13 +73,13 @@ def compute_avg_background(px, py, bnd):
     j = 200
     wd = bnd[px-j:px+j+1, py-j:py+j+1]
     if not wd.size:
-        return 0., 0.
-    
+        return 0., 0.    
     wd_rad = bt2rad(wd, 3.9)
     zsc = stats.zscore(wd)
     #print(zsc)
     bck_rad = np.where(zsc > -0.5, np.nan, wd_rad)
     return np.nanmedian(bck_rad), wd_rad[j, j]
+
 
 def compute_frp(pixsz_x, pixsz_y, pvalue, bkvalue):
     """
@@ -100,56 +101,53 @@ def compute_frp(pixsz_x, pixsz_y, pvalue, bkvalue):
     return frp #MW
 
 
-width = 5424
-height = 5424
+
+width, height = 5424, 5424
 ulx, uly, lrx, lry = -5434894.701, 5434894.701, 5434895.218, -5434895.218
 
 
-def xy2uv(x, y):
-    u = int(width * (x - ulx)/(lrx - ulx))
-    v = int(height * (uly - y)/(uly - lry))
-    return u, v
+def coordinates2ij(x, y):
+    i = int(width * (x - ulx)/(lrx - ulx))
+    j = int(height * (uly - y)/(uly - lry))
+    return i, j
 
 
-pathInputSatAz = 'sat_az.tif'
-pathInputCh07 = 'OR_ABI-L2-CMIPF-M6C07_G16_s20211211940163_e20211211949482_c20211211949541.tif'
+if __name__== "__main__":
+    pathInputSatAz = 'data/goes16_local_zenith_angle.tif'
+    pathInputCh07 = 'data/OR_ABI-L2-CMIPF-M6C07_G16_s20211211940163_e20211211949482_c20211211949541.tif'
+    pathInputCSV = 'data/GIM10_PC_202105011940.csv'
+    pathOutputCSV = 'data/GIM10_PC_FRP_202105011940.csv'
+    
+    ds_satz = rasterio.open(pathInputSatAz)
+    satz = ds_satz.read(1)
 
-ds_satz = rasterio.open(pathInputSatAz)
-satz = ds_satz.read(1)
+    ds_ch07 = rasterio.open(pathInputCh07)
+    ch07 = ds_ch07.read(1)
 
-ds_ch07 = rasterio.open(pathInputCh07)
-ch07 = ds_ch07.read(1)
+    outcsv = []
+    with open(pathInputCSV) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        line_count = 0
+        for row in csv_reader:
+            if line_count > 0:
+                x = float(row[0])
+                y = float(row[1])
+                lon = float(row[2])
+                lat = float(row[3])
+                i, j = coordinates2ij(x, y)
+                stz = satz[i,j]
+                szx, szy, resx, resy = compute_pixel_size( lat, stz )
+                bkvalue, pvalue = compute_avg_background(i, j, ch07)
+                frp = compute_frp(szx, szy, pvalue, bkvalue)
+                row.append(frp)
+            else:
+                row.append('FRP')
+            outcsv.append(row)
+            line_count += 1
+        print(f'Líneas procesadas {line_count}.')
 
-print(ulx, uly, xy2uv(ulx, uly))
-print(lrx, lry, xy2uv(lrx, lry))
-
-outfilename = 'GIM10_PC_FRP_202105011940.csv'
-outcsv = []
-with open('GIM10_PC_202105011940.csv') as csv_file:
-    csv_reader = csv.reader(csv_file, delimiter=',')
-    line_count = 0
-    for row in csv_reader:
-        if line_count > 0:
-            x = float(row[0])
-            y = float(row[1])
-            lon = float(row[2])
-            lat = float(row[3])
-            i, j = xy2uv(x, y)
-            stz = satz[i,j]
-            szx, szy, resx, resy = compute_pixel_size( lat, stz )
-            bkvalue, pvalue = compute_avg_background(i, j, ch07)
-            frp = compute_frp(szx, szy, pvalue, bkvalue)
-            row.append(frp)
-            print(frp)
-        else:
-            row.append('FRP')
-        outcsv.append(row)
-        line_count += 1
-    print(f'Líneas procesadas {line_count}.')
-
-
-with open(outfilename, mode='w') as csv_file:
-    csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-    for row in outcsv:
-        csv_writer.writerow(row)
+    with open(pathOutputCSV, mode='w') as csv_file:
+        csv_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        for row in outcsv:
+            csv_writer.writerow(row)
 
