@@ -101,11 +101,13 @@ def compute_frp(pixsz_x, pixsz_y, pvalue, bkvalue):
     return frp #MW
 
 
-
+# Dimensiones y límites de una imagen GOES16 a 2km
 width, height = 5424, 5424
 ulx, uly, lrx, lry = -5434894.701, 5434894.701, 5434895.218, -5434895.218
 
 
+# A partir de coordenadas geoestacionarias calcula la posición del pixel
+# en la imagen raster.
 def coordinates2ij(x, y):
     i = int(width * (x - ulx)/(lrx - ulx))
     j = int(height * (uly - y)/(uly - lry))
@@ -115,15 +117,20 @@ def coordinates2ij(x, y):
 if __name__== "__main__":
     pathInputSatAz = 'data/goes16_local_zenith_angle.tif'
     pathInputCh07 = 'data/OR_ABI-L2-CMIPF-M6C07_G16_s20211211940163_e20211211949482_c20211211949541.tif'
+    pathInputCh07 = 'data/OR_ABI-L1b-RadF-M6C07_G16_s20211211940163_e20211211949482_c20211211949522.nc'
     pathInputCSV = 'data/GIM10_PC_202105011940.csv'
     pathOutputCSV = 'data/GIM10_PC_FRP_202105011940.csv'
     
     ds_satz = rasterio.open(pathInputSatAz)
     satz = ds_satz.read(1)
 
+    # Checar si es nc y hacer lo equivalente
     ds_ch07 = rasterio.open(pathInputCh07)
     ch07 = ds_ch07.read(1)
 
+    if 'L1b' in pathInputCh07:
+        ch07 = bt2rad(ch07, 3.9)
+        
     outcsv = []
     with open(pathInputCSV) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
