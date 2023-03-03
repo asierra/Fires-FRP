@@ -85,11 +85,11 @@ def compute_avg_background(px, py, bnd, bt):
     """
     """
     j = 200
-    wd = bnd[px-j:px+j+1, py-j:py+j+1]
+    wd = bt[px-j:px+j+1, py-j:py+j+1]
     if not wd.size:
         return 0., 0.    
     wd_rad = bt2rad(wd, 3.9)
-    wd_rad = bt[px-j:px+j+1, py-j:py+j+1]
+    #wd_rad = bnd[px-j:px+j+1, py-j:py+j+1]
     #print(wd)
     #print(wd_rad)
     zsc = stats.zscore(wd)
@@ -105,6 +105,9 @@ def compute_frp(pixsz_x, pixsz_y, pvalue, bkvalue):
     @pvalue rad
     @bkvalue rad
     """
+
+    print("pixsz_x:",pixsz_x)
+    print("pixsz_y:",pixsz_y)
     sigma = 5.67E-8 # W m-2 K4
     a = 3.08E-9 # W m-2 sr-1 um-1 K-4
     t1 = sigma/a
