@@ -13,7 +13,7 @@ import rasterio
 import numpy as np
 from scipy import stats
 import csv
-
+from netCDF4 import Dataset
 
 def compute_pixel_size( lattd, satz, ifov=2.0 ):
     """
@@ -66,8 +66,22 @@ def bt2rad(bt_arr, wl):
     rad = c1/(wl**5 * (np.exp(c2/(wl * bt_arr)) - 1))
     return rad
 
+def rad2bt(rad_arr, wl):
+    """
+    The Inverse Planck Function
+    Convert from spectral radiance and wavelength
+    to temperature
+    @wl: Central Wavelength (um)
+    @rad: Radiance array (mW)
+    http://ncc.nesdis.noaa.gov/data/planck.html
+    """
+    c1 = 1.191042E8 #W m-2 sr-1 um-4
+    c2 = 1.4387752E4 #K um
 
-def compute_avg_background(px, py, bnd):
+    rad = c2/(wl*np.log((c1)/(wl**5 * rad_arr + 1)))
+    return rad
+
+def compute_avg_background(px, py, bnd, bt):
     """
     """
     j = 200
@@ -75,6 +89,9 @@ def compute_avg_background(px, py, bnd):
     if not wd.size:
         return 0., 0.    
     wd_rad = bt2rad(wd, 3.9)
+    wd_rad = bt[px-j:px+j+1, py-j:py+j+1]
+    #print(wd)
+    #print(wd_rad)
     zsc = stats.zscore(wd)
     #print(zsc)
     bck_rad = np.where(zsc > -0.5, np.nan, wd_rad)
@@ -116,7 +133,7 @@ def coordinates2ij(x, y):
 
 if __name__== "__main__":
     pathInputSatAz = 'data/goes16_local_zenith_angle.tif'
-    pathInputCh07 = 'data/OR_ABI-L2-CMIPF-M6C07_G16_s20211211940163_e20211211949482_c20211211949541.tif'
+    pathInputCh07_bt = 'data/OR_ABI-L2-CMIPF-M6C07_G16_s20211211940163_e20211211949482_c20211211949541.tif'
     pathInputCh07 = 'data/OR_ABI-L1b-RadF-M6C07_G16_s20211211940163_e20211211949482_c20211211949522.nc'
     pathInputCSV = 'data/GIM10_PC_202105011940.csv'
     pathOutputCSV = 'data/GIM10_PC_FRP_202105011940.csv'
@@ -125,11 +142,18 @@ if __name__== "__main__":
     satz = ds_satz.read(1)
 
     # Checar si es nc y hacer lo equivalente
-    ds_ch07 = rasterio.open(pathInputCh07)
-    ch07 = ds_ch07.read(1)
+    if '.nc' in pathInputCh07:
+        ds = Dataset(pathInputCh07, "r", format="NETCDF4")
+        ch07 = (ds['Rad'][:].data * ds['Rad'].scale_factor) + ds['Rad'].add_offset
+        ds_ch07 = rasterio.open(pathInputCh07_bt)
+        ch07_bt = ds_ch07.read(1)
+    else:
+        ds_ch07 = rasterio.open(pathInputCh07)
+        ch07 = ds_ch07.read(1)
 
-    if 'L1b' in pathInputCh07:
-        ch07 = bt2rad(ch07, 3.9)
+    #if 'L1b' in pathInputCh07:
+        #ch07 = bt2rad(ch07, 3.9)
+    #    ch07 = rad2bt(ch07, 3.9)
         
     outcsv = []
     with open(pathInputCSV) as csv_file:
@@ -144,8 +168,11 @@ if __name__== "__main__":
                 i, j = coordinates2ij(x, y)
                 stz = satz[i,j]
                 szx, szy, resx, resy = compute_pixel_size( lat, stz )
-                bkvalue, pvalue = compute_avg_background(i, j, ch07)
+                bkvalue, pvalue = compute_avg_background(i, j, ch07, ch07_bt)
                 frp = compute_frp(szx, szy, pvalue, bkvalue)
+                print('bkvale:',bkvalue)
+                print('pvalue:',pvalue)
+                print('frp:',frp)
                 row.append(frp)
             else:
                 row.append('FRP')
