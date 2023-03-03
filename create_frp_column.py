@@ -163,6 +163,7 @@ if __name__== "__main__":
         csv_reader = csv.reader(csv_file, delimiter=',')
         line_count = 0
         for row in csv_reader:
+            #
             if line_count > 0:
                 x = float(row[0])
                 y = float(row[1])
