@@ -149,7 +149,7 @@ if __name__== "__main__":
     if '.nc' in pathInputCh07:
         ds = Dataset(pathInputCh07, "r", format="NETCDF4")
         ch07 = (ds['Rad'][:].data * ds['Rad'].scale_factor) + ds['Rad'].add_offset
-        ds_ch07 = gdal.Open(pathInputCh07)
+        ds_ch07 = gdal.Open(pathInputCh07_bt)
         ch07_bt = ds_ch07.ReadAsArray()
     else:
         ds_ch07 = rasterio.open(pathInputCh07)
