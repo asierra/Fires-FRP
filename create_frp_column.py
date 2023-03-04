@@ -173,6 +173,7 @@ if __name__== "__main__":
                 lon = float(row[2])
                 lat = float(row[3])
                 i, j = coordinates2ij(x, y)
+                print(i,j)
                 stz = satz[i,j]
                 szx, szy, resx, resy = compute_pixel_size( lat, stz )
                 bkvalue, pvalue = compute_avg_background(i, j, ch07, ch07_bt)
