@@ -14,6 +14,7 @@ import numpy as np
 from scipy import stats
 import csv
 from netCDF4 import Dataset
+from osgeo import gdal
 
 def compute_pixel_size( lattd, satz, ifov=2.0 ):
     """
@@ -151,8 +152,10 @@ if __name__== "__main__":
         ds_ch07 = rasterio.open(pathInputCh07_bt)
         ch07_bt = ds_ch07.read(1)
     else:
-        ds_ch07 = rasterio.open(pathInputCh07)
-        ch07 = ds_ch07.read(1)
+        #ds_ch07 = rasterio.open(pathInputCh07)
+        #ch07 = ds_ch07.read(1)
+        ds_ch07 = gdal.Open(pathInputCh07)
+        ch07 = ds_ch07.ReadAsArray()
 
     #if 'L1b' in pathInputCh07:
         #ch07 = bt2rad(ch07, 3.9)
