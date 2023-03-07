@@ -86,7 +86,7 @@ def compute_avg_background(px, py, bnd, bt):
     """
     """
     j = 200
-    wd = bnd[px-j:px+j+1, py-j:py+j+1]
+    wd = bt[px-j:px+j+1, py-j:py+j+1]
     if not wd.size:
         return 0., 0.    
     #wd_rad = bt2rad(wd, 3.9)
