@@ -86,13 +86,11 @@ def compute_avg_background(px, py, bnd, bt):
     """
     """
     j = 200
-    wd = bt[px-j:px+j+1, py-j:py+j+1]
+    wd = bnd[px-j:px+j+1, py-j:py+j+1]
     if not wd.size:
         return 0., 0.    
-    wd_rad = bt2rad(wd, 3.9)
-    #wd_rad = bnd[px-j:px+j+1, py-j:py+j+1]
-    #print(wd)
-    #print(wd_rad)
+    #wd_rad = bt2rad(wd, 3.9)
+    wd_rad = bnd[px-j:px+j+1, py-j:py+j+1]
     zsc = stats.zscore(wd)
     #print(zsc)
     bck_rad = np.where(zsc > -0.5, np.nan, wd_rad)
@@ -142,13 +140,13 @@ if __name__== "__main__":
     pathInputCSV = 'data/GIM10_PC_202105011940.csv'
     pathOutputCSV = 'data/GIM10_PC_FRP_202105011940.csv'
     
-    ds_satz = rasterio.open(pathInputSatAz)
-    satz = ds_satz.read(1)
+    ds_satz = gdal.Open(pathInputSatAz)
+    satz = ds_satz.ReadAsArray()
 
     # Checar si es nc y hacer lo equivalente
     if '.nc' in pathInputCh07:
         ds = Dataset(pathInputCh07, "r", format="NETCDF4")
-        ch07 = (ds['Rad'][:].data * ds['Rad'].scale_factor) + ds['Rad'].add_offset
+        ch07_rad = (ds['Rad'][:].data * ds['Rad'].scale_factor) + ds['Rad'].add_offset
         ds_ch07 = gdal.Open(pathInputCh07_bt)
         ch07_bt = ds_ch07.ReadAsArray()
     else:
@@ -157,10 +155,6 @@ if __name__== "__main__":
         #ds_ch07 = gdal.Open(pathInputCh07)
         #ch07 = ds_ch07.ReadAsArray()
 
-    #if 'L1b' in pathInputCh07:
-        #ch07 = bt2rad(ch07, 3.9)
-    #    ch07 = rad2bt(ch07, 3.9)
-        
     outcsv = []
     with open(pathInputCSV) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
@@ -172,16 +166,13 @@ if __name__== "__main__":
                 y = float(row[1])
                 lon = float(row[2])
                 lat = float(row[3])
-                i, j = coordinates2ij(x, y)
-                print(x,y)
-                print(i,j)
+                j, i = coordinates2ij(x, y)
+                print(x,y,i,j,ch07_rad[i,j])
                 stz = satz[i,j]
                 szx, szy, resx, resy = compute_pixel_size( lat, stz )
-                bkvalue, pvalue = compute_avg_background(i, j, ch07, ch07_bt)
+                bkvalue, pvalue = compute_avg_background(i, j, ch07_rad, ch07_bt)
                 frp = compute_frp(szx, szy, pvalue, bkvalue)
-                print('bkvale:',bkvalue)
-                print('pvalue:',pvalue)
-                print('frp:',frp)
+                print('bkvale:',bkvalue, 'pvalue:',pvalue, 'frp:',frp)
                 row.append(frp)
             else:
                 row.append('FRP')
