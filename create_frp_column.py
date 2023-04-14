@@ -51,6 +51,141 @@ def compute_pixel_size( lattd, satz, ifov=2.0 ):
 
     return pixsz_x, pixsz_y, res_x, res_y
 
+def nu_get_sun_ecliptic_longitude(jdate):
+    """
+    Ecliptic longitude of the sun at jdate-time
+    https://github.com/pytroll/pyorbital/blob/master/pyorbital/astronomy.py
+    """
+    m_a = np.deg2rad(357.52910 + 35999.05030 * jdate -
+                     0.0001559 * jdate * jdate -
+                     0.00000048 * jdate * jdate * jdate)
+
+    # mean longitude, deg
+    l_0 = 280.46645 + 36000.76983 * jdate + 0.0003032 * jdate * jdate
+    d_l = (1.914600 - 0.004817 * jdate - 0.000014 * jdate * jdate)
+    d_l *= np.sin(m_a)
+    d_l += (0.019993 - 0.000101 * jdate) * np.sin(2 * m_a)
+    d_l += 0.000290 * np.sin(3 * m_a)
+
+    # true longitude, deg
+    l__ = l_0 + d_l
+    return np.deg2rad(l__)
+
+def nu_sun_ra_dec(jdate):
+    """Right ascension and declination of the sun at *utc_time*.
+    https://github.com/pytroll/pyorbital/blob/master/pyorbital/astronomy.py
+    """
+    eps = np.deg2rad(23.0 + 26.0 / 60.0 + 21.448 / 3600.0 -
+                     (46.8150 * jdate + 0.00059 * jdate * jdate -
+                      0.001813 * jdate * jdate * jdate) / 3600)
+
+    eclon = nu_get_sun_ecliptic_longitude(jdate)
+    x__ = np.cos(eclon)
+    y__ = np.cos(eps) * np.sin(eclon)
+    z__ = np.sin(eps) * np.sin(eclon)
+    r__ = np.sqrt(1.0 - z__ * z__)
+
+    # sun declination
+    declination = np.arctan2(z__, r__)
+
+    # right ascension
+    right_ascension = 2 * np.arctan2(y__, (x__ + r__))
+    return right_ascension, declination
+
+def nu_local_hour_angle(jdate, longitude, right_ascension):
+    """Hour angle at *utc_time* for the given *longitude* and
+    *right_ascension*
+    longitude in radians
+    https://github.com/pytroll/pyorbital/blob/master/pyorbital/astronomy.py
+    """
+    theta = 67310.54841 + jdate * (876600 * 3600 + 8640184.812866 + jdate *
+                                   (0.093104 - jdate * 6.2 * 10e-6))
+
+    ### Greenwich mean sidereal utc_time, in radians.
+    gmst = np.deg2rad(theta / 240.0) % (2 * np.pi)
+    ### Local mean sidereal time, In radians.
+    lmst = gmst + longitude
+
+    return lmst - right_ascension
+
+def get_jdate(dtobj):
+    """
+    https://github.com/pytroll/pyorbital/blob/master/pyorbital/astronomy.py
+    """
+    diffdt = np.datetime64(dtobj) - np.datetime64('2000-01-01T12:00')
+    days = diffdt/np.timedelta64(1, 'D')
+
+    return days / 36525.0
+
+def get_alt_az(jdate, lon, lat):
+    """Return sun altitude and azimuth from *utc_time*, *lon*, and *lat*.
+    lon,lat in degrees
+    https://github.com/pytroll/pyorbital/blob/master/pyorbital/astronomy.py
+    """
+    lon = np.deg2rad(lon)
+    lat = np.deg2rad(lat)
+
+    ra, dec = nu_sun_ra_dec(jdate)
+    h = nu_local_hour_angle(jdate, lon, ra)
+    return (np.arcsin(np.sin(lat) * np.sin(dec) +
+                      np.cos(lat) * np.cos(dec) * np.cos(h)),
+            np.arctan2(-np.sin(h),
+                       (np.cos(lat) * np.tan(dec) - np.sin(lat) * np.cos(h))))
+
+def get_sunr_angle(lat, lon, jdate, sat_elev, sat_az):
+    """
+    The worst time with other procs
+    real    2m35.487s
+    user    0m39.688s
+    sys     0m38.297s
+    """
+    sun_elev_rad, sun_az_rad = get_alt_az(jdate, lon, lat)
+    sun_az_rad = np.where( sun_az_rad < 0, 2 * np.pi + sun_az_rad, sun_az_rad )
+
+    sat_elev_rad = np.deg2rad(sat_elev)
+    sat_az_rad = np.deg2rad(sat_az)
+
+    # https://en.wikipedia.org/wiki/Great-circle_distance
+    relaz_rad = np.absolute(sat_az_rad - sun_az_rad)
+
+    dltphi = np.cos(sat_elev_rad) * np.cos(relaz_rad)
+    sunr = np.rad2deg(np.arccos(dltphi))
+
+    sun_az = np.rad2deg(sun_az_rad)
+    sun_elev = np.rad2deg(sun_elev_rad)
+
+    return sunr, sun_elev, sun_az
+
+def compute_stz(dtobj, pathLat, pathLon ,pathC07, pathElev, pathAz):
+    """
+    Compute the solar zenith angle
+    dtobj = datetime.strptime("%s%s" % (date, hour), "%Y%m%d%H%M")
+    """
+    lattd = np.fromfile(pathLat, dtype='float32')
+    lontd = np.fromfile(pathLon, dtype='float32')
+    # Workaround for the testing phase of the satellite at 2017
+    ds = Dataset(pathC07, 'r')
+    lg0 = ds.variables['goes_imager_projection'].longitude_of_projection_origin
+    if lg0 == -89.5:
+            lontd = lontd - 14.5
+            
+    sat_elev = np.fromfile( pathElev, dtype='int16')
+    sat_az = np.fromfile(pathAz, dtype='int16')
+    
+    jdate = get_jdate(dtobj)
+    sunr, sun_elev, sun_az = get_sunr_angle(lattd, lontd, jdate, sat_elev, sat_az)
+
+    sunz = np.absolute(np.round(sun_elev) - 90)
+    satz = np.absolute(sat_elev - 90)
+    relaz = np.absolute(sun_az - sat_az)
+    relaz.resize(5424,5424)
+
+    sunr.resize(5424,5424)
+    sunz.resize(5424,5424)
+    sun_az.resize(5424,5424)
+
+    satz = np.absolute(sat_elev - 90.)
+    satz.resize(5424,5424)
 
 def bt2rad(bt_arr, wl):
     """
@@ -89,8 +224,8 @@ def compute_avg_background(px, py, bnd, bt):
     wd = bt[px-j:px+j+1, py-j:py+j+1]
     if not wd.size:
         return 0., 0.    
-    #wd_rad = bt2rad(wd, 3.9)
-    wd_rad = bnd[px-j:px+j+1, py-j:py+j+1]
+    wd_rad = bt2rad(wd, 3.9)
+    #wd_rad = bnd[px-j:px+j+1, py-j:py+j+1]
     zsc = stats.zscore(wd)
     #print(zsc)
     bck_rad = np.where(zsc > -0.5, np.nan, wd_rad)
@@ -166,7 +301,7 @@ if __name__== "__main__":
                 y = float(row[1])
                 lon = float(row[2])
                 lat = float(row[3])
-                j, i = coordinates2ij(x, y)
+                i, j = coordinates2ij(x, y)
                 print(x,y,i,j,ch07_rad[i,j])
                 stz = satz[i,j]
                 szx, szy, resx, resy = compute_pixel_size( lat, stz )
