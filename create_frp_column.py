@@ -293,7 +293,7 @@ if __name__== "__main__":
     # Obtiene satz
     #ds_satz = gdal.Open(pathInputSatAz)
     #satz = ds_satz.ReadAsArray()
-    satz = compute_stz(dtobj, pathLat, pathLon, pathInputCh07, pathElev, pathAz)
+    satz = compute_stz(dtobj, pathLat, pathLon, pathInputCh07_bt, pathElev, pathAz)
 
     # Checar si es nc y hacer lo equivalente
     if '.nc' in pathInputCh07:
