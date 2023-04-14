@@ -15,6 +15,7 @@ from scipy import stats
 import csv
 from netCDF4 import Dataset
 from osgeo import gdal
+from datetime import datetime
 
 def compute_pixel_size( lattd, satz, ifov=2.0 ):
     """
@@ -187,6 +188,8 @@ def compute_stz(dtobj, pathLat, pathLon ,pathC07, pathElev, pathAz):
     satz = np.absolute(sat_elev - 90.)
     satz.resize(5424,5424)
 
+    return satz
+
 def bt2rad(bt_arr, wl):
     """
     The Planck Function
@@ -269,14 +272,27 @@ def coordinates2ij(x, y):
 
 
 if __name__== "__main__":
+
+    # Datos de temperatura de brillo de la banda 7
     pathInputSatAz = 'data/goes16_local_zenith_angle.tif'
     pathInputCh07_bt = 'data/OR_ABI-L2-CMIPF-M6C07_G16_s20211211940163_e20211211949482_c20211211949541.tif'
     pathInputCh07 = 'data/OR_ABI-L1b-RadF-M6C07_G16_s20211211940163_e20211211949482_c20211211949522.nc'
     pathInputCSV = 'data/GIM10_PC_202105011940.csv'
     pathOutputCSV = 'data/GIM10_PC_FRP_202105011940.csv'
+
+    # Datos de navegación
+    pathLat = 'data/navf_latitude.bin'
+    pathLon = 'data/navf_longitude.bin'
+    pathElev = 'data/sat_elev.bin'
+    pathAz = 'data/sat_az.bin'
     
-    ds_satz = gdal.Open(pathInputSatAz)
-    satz = ds_satz.ReadAsArray()
+    # Obtiene el tiempo de la imagen
+    dtobj = datetime.strptime(pathInputCh07.split('/')[-1].split('_')[3], 's%Y%j%H%M%S')
+
+    # Obtiene satz
+    #ds_satz = gdal.Open(pathInputSatAz)
+    #satz = ds_satz.ReadAsArray()
+    satz = compute_stz(dtobj, pathLat, pathLon, pathInputCh07, pathElev, pathAz)
 
     # Checar si es nc y hacer lo equivalente
     if '.nc' in pathInputCh07:
