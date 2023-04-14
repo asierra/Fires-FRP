@@ -288,7 +288,7 @@ if __name__== "__main__":
     
     # Obtiene el tiempo de la imagen
     print(pathInputCh07.split('/')[-1].split('_')[3])
-    dtobj = datetime.strptime(pathInputCh07.split('/')[-1].split('_')[3], 's%Y%j%H%M%S')
+    dtobj = datetime.strptime(pathInputCh07.split('/')[-1].split('_')[3], 's%Y%j%H%M%S%f')
 
     # Obtiene satz
     #ds_satz = gdal.Open(pathInputSatAz)
