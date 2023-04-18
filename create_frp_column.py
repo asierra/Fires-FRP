@@ -303,6 +303,7 @@ if __name__== "__main__":
         ch07_bt = (ds_ch07['CMI'][:].data * ds_ch07['CMI'].scale_factor) + ds_ch07['CMI'].add_offset
         #ds_ch07 = gdal.Open(pathInputCh07_bt)
         #ch07_bt = ds_ch07.ReadAsArray()
+        ds_ras = Dataset(pathInputCh07_bt, "r", format="NETCDF4")
     else:
         ds_ch07 = rasterio.open(pathInputCh07)
         ch07 = ds_ch07.read(1)
@@ -320,11 +321,14 @@ if __name__== "__main__":
                 y = float(row[1])
                 lon = float(row[2])
                 lat = float(row[3])
-                i, j = coordinates2ij(x, y)
+                #i, j = coordinates2ij(x, y)
+                # Con rasterio
+                transform = ds_ras.transform
+                i, j = ds_ras.index(x, y)
                 print(x,y,i,j,ch07_bt[i,j])
                 stz = satz[i,j]
                 szx, szy, resx, resy = compute_pixel_size( lat, stz )
-                bkvalue, pvalue = compute_avg_background(j, i, ch07_rad, ch07_bt)
+                bkvalue, pvalue = compute_avg_background(i, j, ch07_rad, ch07_bt)
                 frp = compute_frp(szx, szy, pvalue, bkvalue)
                 print('bkvale:',bkvalue, 'pvalue:',pvalue, 'frp:',frp)
                 row.append(frp)
