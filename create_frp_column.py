@@ -278,7 +278,7 @@ if __name__== "__main__":
     pathInputCh07_bt = 'data/OR_ABI-L2-CMIPF-M6C07_G16_s20211211940163_e20211211949482_c20211211949541.nc'
     pathInputCh07_bt_tif = 'data/OR_ABI-L2-CMIPF-M6C07_G16_s20211211940163_e20211211949482_c20211211949541.tif'
     pathInputCh07 = 'data/OR_ABI-L1b-RadF-M6C07_G16_s20211211940163_e20211211949482_c20211211949522.nc'
-    pathInputCSV = 'data/GIM10_PC_202105011940_muestreo.csv'
+    pathInputCSV = 'data/GIM10_PC_202105011940.csv'
     pathOutputCSV = 'data/GIM10_PC_FRP_202105011940.csv'
 
     # Datos de navegación
