@@ -315,7 +315,7 @@ if __name__== "__main__":
         line_count = 0
         for row in csv_reader:
             #
-            if line_count > 1:
+            if line_count > 0:
                 x = float(row[0])
                 y = float(row[1])
                 lon = float(row[2])
@@ -329,6 +329,7 @@ if __name__== "__main__":
                 print('bkvale:',bkvalue, 'pvalue:',pvalue, 'frp:',frp)
                 row.append(frp)
             else:
+                row = row[:-1]
                 row.append('FRP')
             outcsv.append(row)
             line_count += 1
