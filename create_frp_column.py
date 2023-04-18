@@ -323,10 +323,10 @@ if __name__== "__main__":
                 y = float(row[1])
                 lon = float(row[2])
                 lat = float(row[3])
-                #i, j = coordinates2ij(x, y)
+                i, j = coordinates2ij(x, y)
                 # Con rasterio
-                transform = ds_ras.transform
-                i, j = ds_ras.index(x, y)
+                #transform = ds_ras.transform
+                #i, j = ds_ras.index(x, y)
                 print(x,y,i,j,ch07_bt[i,j])
                 stz = satz[i,j]
                 szx, szy, resx, resy = compute_pixel_size( lat, stz )
