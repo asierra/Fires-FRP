@@ -275,7 +275,7 @@ if __name__== "__main__":
 
     # Datos de temperatura de brillo de la banda 7
     pathInputSatAz = 'data/goes16_local_zenith_angle.tif'
-    pathInputCh07_bt = 'data/OR_ABI-L2-CMIPF-M6C07_G16_s20211211940163_e20211211949482_c20211211949541.tif'
+    pathInputCh07_bt = 'data/OR_ABI-L2-CMIPF-M6C07_G16_s20211211940163_e20211211949482_c20211211949541.nc'
     pathInputCh07 = 'data/OR_ABI-L1b-RadF-M6C07_G16_s20211211940163_e20211211949482_c20211211949522.nc'
     pathInputCSV = 'data/GIM10_PC_202105011940_muestreo.csv'
     pathOutputCSV = 'data/GIM10_PC_FRP_202105011940.csv'
@@ -296,11 +296,13 @@ if __name__== "__main__":
     satz = compute_stz(dtobj, pathLat, pathLon, pathInputCh07_bt, pathElev, pathAz)
 
     # Checar si es nc y hacer lo equivalente
-    if '.nc' in pathInputCh07:
+    if '.nc' in pathInputCh07_bt:
         ds = Dataset(pathInputCh07, "r", format="NETCDF4")
         ch07_rad = (ds['Rad'][:].data * ds['Rad'].scale_factor) + ds['Rad'].add_offset
-        ds_ch07 = gdal.Open(pathInputCh07_bt)
-        ch07_bt = ds_ch07.ReadAsArray()
+        ds_ch07 = Dataset(pathInputCh07_bt, "r", format="NETCDF4")
+        ch07_bt = (ds_ch07['CMI'][:].data * ds_ch07['CMI'].scale_factor) + ds_ch07['CMI'].add_offset
+        #ds_ch07 = gdal.Open(pathInputCh07_bt)
+        #ch07_bt = ds_ch07.ReadAsArray()
     else:
         ds_ch07 = rasterio.open(pathInputCh07)
         ch07 = ds_ch07.read(1)
