@@ -321,10 +321,10 @@ if __name__== "__main__":
                 lon = float(row[2])
                 lat = float(row[3])
                 i, j = coordinates2ij(x, y)
-                print(x,y,i,j,356.83)
+                print(x,y,i,j,ch07_bt[i,j])
                 stz = satz[i,j]
                 szx, szy, resx, resy = compute_pixel_size( lat, stz )
-                bkvalue, pvalue = compute_avg_background(i, j, ch07_rad, ch07_bt)
+                bkvalue, pvalue = compute_avg_background(j, i, ch07_rad, ch07_bt)
                 frp = compute_frp(szx, szy, pvalue, bkvalue)
                 print('bkvale:',bkvalue, 'pvalue:',pvalue, 'frp:',frp)
                 row.append(frp)
