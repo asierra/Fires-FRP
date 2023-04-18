@@ -326,7 +326,7 @@ if __name__== "__main__":
                 # Con rasterio
                 transform = ds_ras.transform
                 i, j = ds_ras.index(x, y)
-                print(x,y,i,j,ch07_bt[i,j])
+                print(x,y,i,j,ch07_bt[j,i])
                 stz = satz[i,j]
                 szx, szy, resx, resy = compute_pixel_size( lat, stz )
                 bkvalue, pvalue = compute_avg_background(i, j, ch07_rad, ch07_bt)
