@@ -321,7 +321,7 @@ if __name__== "__main__":
                 lon = float(row[2])
                 lat = float(row[3])
                 i, j = coordinates2ij(x, y)
-                print(x,y,i,j,ch07_bt[i,j])
+                print(x,y,i,j,ch07_bt[j,i])
                 stz = satz[i,j]
                 szx, szy, resx, resy = compute_pixel_size( lat, stz )
                 bkvalue, pvalue = compute_avg_background(i, j, ch07_rad, ch07_bt)
@@ -329,7 +329,6 @@ if __name__== "__main__":
                 print('bkvale:',bkvalue, 'pvalue:',pvalue, 'frp:',frp)
                 row.append(frp)
             else:
-                row = row[:-1]
                 row.append('FRP')
             outcsv.append(row)
             line_count += 1
