@@ -304,7 +304,7 @@ if __name__== "__main__":
         ch07_bt = (ds_ch07['CMI'][:].data * ds_ch07['CMI'].scale_factor) + ds_ch07['CMI'].add_offset
         #ds_ch07 = gdal.Open(pathInputCh07_bt)
         #ch07_bt = ds_ch07.ReadAsArray()
-        ds_ras = rasterio.open(pathInputCh07_bt)
+        ds_ras = rasterio.open(pathInputCh07_bt_tif)
     else:
         ds_ch07 = rasterio.open(pathInputCh07)
         ch07 = ds_ch07.read(1)
