@@ -315,13 +315,13 @@ if __name__== "__main__":
         line_count = 0
         for row in csv_reader:
             #
-            if line_count > 0:
+            if line_count > 1:
                 x = float(row[0])
                 y = float(row[1])
                 lon = float(row[2])
                 lat = float(row[3])
                 i, j = coordinates2ij(x, y)
-                print(x,y,i,j,ch07_rad[i,j])
+                print(x,y,i,j,ch07_bt[i,j])
                 stz = satz[i,j]
                 szx, szy, resx, resy = compute_pixel_size( lat, stz )
                 bkvalue, pvalue = compute_avg_background(i, j, ch07_rad, ch07_bt)
