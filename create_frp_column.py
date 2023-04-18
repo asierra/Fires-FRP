@@ -323,7 +323,7 @@ if __name__== "__main__":
                 lat = float(row[3])
                 #i, j = coordinates2ij(x, y)
                 # Con rasterio
-                transform = ds_ras.transform
+                #transform = ds_ras.transform
                 i, j = ds_ras.index(x, y)
                 print(x,y,i,j,ch07_bt[i,j])
                 stz = satz[i,j]
